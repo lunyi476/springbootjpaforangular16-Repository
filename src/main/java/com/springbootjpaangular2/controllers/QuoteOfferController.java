@@ -13,6 +13,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.request.async.DeferredResult;
 //org.springframework.web.servlet.mvc.method.annotation.ExtendedServletRequestDataBinder
 import org.springframework.http.MediaType;
 
@@ -49,21 +51,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 //import com.querydsl.apt.jpa.JPAAnnotationProcessor;
 
 /**
- * For handling request from Angular 16
- * return body (Object), ResponseEntity by json type and not string 
- * (that will trigger view mapping which we don't want) 
+ * For handling request from Angular 8 return body (Object), ResponseEntity by
+ * json type and not string without @ResponseBody (that will trigger view mapping which we don't want)
+ * We do not use @RestController.
  * 
- * @author lyi
- * 08/2023
+ * @author lyi 08/2020
  * 
- * With Spring Web you have two choices to write your app:
- *	(1) Write a server-side rendered application with JSPs, Thymeleaf templates, 
- *      Freemaker templates -> Spring MVC pattern
- *	(2) Write a RESTful backend for e.g. a Single Page Application (like ReactJs or Angular) 
- *      which gets its data from your RESTful backend
- *      
- *  Here, we use (2) and the environment is boot (although inside is embedded web environment) 
- *  instead of tradition server deploying web environment.
+ *         With Spring Web you have two choices to write your app: (1) Write a
+ *         server-side rendered application with JSPs, Thymeleaf templates,
+ *         Freemaker templates -> Spring MVC pattern (2) Write a RESTful backend
+ *         for e.g. a Single Page Application (like ReactJs or Angular) which
+ *         gets its data from your RESTful backend
+ * 
+ *         Here, we use (2) and the environment is boot (although inside is
+ *         embedded web environment) instead of tradition server deploying web
+ *         environment.
  */
 @Controller  
 @CrossOrigin(origins="*")
@@ -247,6 +249,52 @@ public class QuoteOfferController {
     } 
     
     
+	// Save posted either old(update) or new(created) quote
+    // Asynchronous handling request/response
+	@PostMapping(value = "/savequote", consumes = "application/json", produces = MediaType.APPLICATION_JSON_VALUE)
+	public DeferredResult<ResponseEntity<?>> createQuotes(@RequestBody @Validated Quotes quotes, BindingResult result,
+			HttpServletRequest request, HttpServletResponse response) throws Exception {
+		String action = request.getHeader("reqaction");
+		DeferredResult<ResponseEntity<?>> Defresult = new DeferredResult<>();
+	   
+		new Thread(() -> { 
+			    Quotes qts = null;
+			    String jsonString = "";
+			    
+	        	try {
+	        		Thread.sleep(600l);
+	        		
+		    		if (action != null && action.contentEquals("new")) {
+		    			qts = quoteService.saveAndFlush(quotes); 
+		    		} else if (action != null && action.contentEquals("save")) {
+		    			qts = quoteService.updateWholeQuote(quotes);
+		    		}
+	
+		    		List<Quotes> alls = new ArrayList<Quotes>();
+		    		alls.add(qts);
+	
+		    		ObjectMapper mapper = new ObjectMapper();
+		    		// Converting the Object to JSONString Response body
+		    		jsonString = mapper.writeValueAsString(qts);
+		    		
+	        	} catch (Exception er) {}
+
+	        	HttpHeaders headers = new HttpHeaders();
+	    		// For client side to add number into new quote
+	    		if (action != null && action.contentEquals("new") && qts != null)
+	    			headers.add("new_request_no", String.valueOf(qts.getRequest_no()));
+	    		headers.add("Access-Control-Expose-Headers", "*");
+	    		headers.add("message", messageResource.getMessage("quote.save.respmessage", null, Locale.ENGLISH));
+
+	            Defresult.setResult( new ResponseEntity<String>(jsonString, headers, HttpStatus.OK));
+	            
+	        } ).start();
+       
+		 return Defresult;
+	}
+	
+	
+    /**
     // Save posted either old(update) or new(created) quote
     @PostMapping(value ="/savequote", consumes= "application/json", produces =MediaType.APPLICATION_JSON_VALUE) 
     //@Transactional 
@@ -254,14 +302,10 @@ public class QuoteOfferController {
     		HttpServletRequest request, HttpServletResponse response) throws Exception { 
 	    String action = request.getHeader("reqaction");
     	Quotes qts = null;
-    	/**
-    	 * 1. new/save is based on Quote. Old quote may have new Offers.
-    	 * 
-    	 * 2. For error thrown, let server to return it as 
-    	 * HttpErrorResponse to Angular
-    	 * 
-    	 * 3. When testing without real DB, requet_no and owner must be manually added
-    	 */
+    	 // 1. new/save is based on Quote. Old quote may have new Offers.
+    	 // 2. For error thrown, let server to return it as 
+    	 //    HttpErrorResponse to Angular
+    	 // 3. When testing without real DB, requet_no and owner must be manually added
     	if (action != null && action.contentEquals("new"))  {
     		qts = quoteService.saveAndFlush(quotes); 
     	}
@@ -288,7 +332,7 @@ public class QuoteOfferController {
     			jsonString, headers, //jsonString
     			      HttpStatus.OK);    	
     }
-    
+    **/
     
     public static class XmlConverterHelper implements Serializable
     {

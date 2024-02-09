@@ -12,6 +12,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 
 /** 
@@ -26,6 +27,7 @@ import org.springframework.context.support.ReloadableResourceBundleMessageSource
  * to @ConfiguratonProperties
  */
 @Configuration(proxyBeanMethods = false)
+//@EnableWebMvc
 public class WebConfiguration {
 	
 	// The Console lets you access a SQL database using a browser interface
@@ -38,35 +40,6 @@ public class WebConfiguration {
         return registrationBean;
     }
     
-    /** 
-     *  (1)
-     *  defined a Bean same as :
-     * 
-     *  <beans>
-	 *	   <bean id = "terminatBean" class = "com.springbootjpaangular2.configuration.TerminatBean" />
-	 *  </beans>
-	 * 
-	 *  If with no explicit name in @Bean specified, @Autowired, @Resource finds a primary 
-	 *  type match instead of a specific named bean.
-	 *  
-	 *  (2) Use BeanFactory, A is Bean:
-	 *  
-	 *  public class A  implements BeanFactoryAware{
-	 *	@Override
-	 *	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-	 *	    .....
-	 *	}
-	 *  
-	 *  (3)
-	 *  @Value inject:
-	 *  
-	 *  public MovieRecommender(@Value("${catalog.name}") String catalog) {
-     *   	this.catalog = catalog;
-     *	}
-     *
-     * ${catalog.name} from @PropertySource("classpath:application.properties")
-     * 
-     */
     @Bean
     public TerminatBean getTerminateBean() {
         return new TerminatBean();
@@ -82,16 +55,4 @@ public class WebConfiguration {
 	    return messageSource;
 	}
 	
-	// Tomcat 8.5 does not allow [] in encoding, to allow it
-	/**@Bean
-	public ConfigurableServletWebServerFactory webServerFactory() {
-	    TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
-	    factory.addConnectorCustomizers(new TomcatConnectorCustomizer() {
-	        @Override
-	        public void customize(Connector connector) {
-	            connector.setProperty("relaxedQueryChars", "|{}[]");
-	        }
-	    });
-	    return factory;
-	}**/
 }

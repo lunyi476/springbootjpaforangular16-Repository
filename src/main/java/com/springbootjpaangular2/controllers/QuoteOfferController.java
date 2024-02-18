@@ -49,6 +49,8 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 //import com.querydsl.apt.jpa.JPAAnnotationProcessor;
+import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
 /**
  * For handling request from Angular 8 return body (Object), ResponseEntity by
@@ -75,7 +77,7 @@ public class QuoteOfferController {
 	
 	public static String DEFAULT_OWNER = "BAMBOOROSE";
 	
-	@Autowired // this kind repository can benefit from both default repository and custom repository
+	@Autowired // SimpleJpaRepository
     private QuotesRepository quoteService;
 	
 	@Autowired

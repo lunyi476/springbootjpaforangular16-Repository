@@ -60,7 +60,7 @@ import com.google.common.base.Preconditions;
 		@PropertySource("classpath:example1.properties")
 		@PropertySource("classpath:example2.properties")
 
-    (2) change default property to looad:
+    (2) change default property to load:
 		 If we want to change which file Spring Boot reads by default then we can use the spring.config.name property.
 		 export SPRING_CONFIG_NAME=foo
 		 Now when we run the spring boot application, it will load all the properties from foo.properties file.
@@ -78,52 +78,32 @@ import com.google.common.base.Preconditions;
 	
 		  
      (5) Initial db data:   
-		   spring.sql.init.platform=
-		   Platform to use in the default schema or data script locations, schema-${platform}.sql and data-${platform}.sql.
+		 spring.sql.init.platform=
+		 Platform to use in the default schema or data script locations, schema-${platform}.sql and data-${platform}.sql.
 		 Locations of the data (DML) scripts to apply to the database:  defualt is in classpath such as: src/main/resources/db
 		 spring.sql.init.data-locations=classpath: db/
 		 spring.sql.init.schema-locations=
-
-
 **/
 public class DBConfigurationProperties {
 	
 	
-	   public DBConfigurationProperties() { super(); }
+	   public DBConfigurationProperties() { super();}
 
 	   @Autowired
 	   private Environment env;
 
-	   
-	    /**
-	    @Bean("entityManagerFactory")
-	    public LocalSessionFactoryBean sessionFactory( ) {
-	        LocalSessionFactoryBean o = new LocalSessionFactoryBean();
-	        o.setDataSource(dataSource());
-	        o.setPackagesToScan("com.springbootjpaangular2.domain");
-	        Properties props = new Properties();
-	        props.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-	        props.setProperty("hibernate.show_sql", "true");
-	        props.setProperty("hibernate.format_sql", "true");
-	        props.setProperty("hibernate.hbm2ddl.auto", "create-drop");
-	        props.setProperty("hibernate.hbm2ddl.import_files", "classpath:/data.sql");  //classpath:/schema.sql,
-	        o.setHibernateProperties(props);
-	        return o;
-	    }
-	    **/
-	    
 	    /**
 	     * return either LocalContainerEntityManagerFactoryBean or EntityManagerFactory is OK.
 	     * but must have em.afterPropertiesSet() to create table schema if return em.getObject()/EntityManagerFactory
 	     * @return
 	     */
 	   
-	    @Bean
-	    public EntityManagerFactory entityManagerFactory() {
-	        final LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
-	        em.setDataSource(dataSource());
-	        em.setPackagesToScan("com.springbootjpaangular2.domain");
-
+		/*
+		 * @Bean public EntityManagerFactory entityManagerFactory() { final
+		 * LocalContainerEntityManagerFactoryBean em = new
+		 * LocalContainerEntityManagerFactoryBean(); em.setDataSource(dataSource());
+		 * em.setPackagesToScan("com.springbootjpaangular2.domain");
+		 */
 	        /**
 	         * an alternative to the way we specify the hibernate configurations
 	         * final HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();	     
@@ -132,7 +112,7 @@ public class DBConfigurationProperties {
 	         * instead we can use: em.setPersistenceProviderClass(HibernatePersistenceProvider.class); 
 	         * to specify property of provider
 	         */    
-	        em.setPersistenceProviderClass(HibernatePersistenceProvider.class);
+	        //em.setPersistenceProviderClass(HibernatePersistenceProvider.class);
 	        /**
 	          em.setJpaPropertyMap(new HashMap<String, Object>() {{
 	            put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
@@ -147,36 +127,42 @@ public class DBConfigurationProperties {
 	          
 	          instead we can use em.setJpaProperties(additionalProperties());
 	          **/
-	        em.setJpaProperties(additionalProperties());
-	        em.afterPropertiesSet(); // no need this if return LocalContainerEntityManagerFactoryBean
-	        return  em.getObject();  
-	    }
+			/*
+			 * em.setJpaProperties(additionalProperties()); em.afterPropertiesSet(); // no
+			 * need this if return LocalContainerEntityManagerFactoryBean return
+			 * em.getObject(); }
+			 */
 	    
-	    @Bean
-	    public DataSource dataSource() {
-	    	// spring.datasource.url=jdbc:h2:mem:testdb;MODE=Oracle;DB_CLOSE_ON_EXIT=FALSE;DB_CLOSE_DELAY=-1
-	    	// without DB_CLOSE_DELAY=-1, the schema created (but lost) and when run application, the error "QUOTES" table not found
-	        final DriverManagerDataSource dataSource = new DriverManagerDataSource();
-	        dataSource.setDriverClassName(Preconditions.checkNotNull(env.getProperty("spring.datasource.driver-class-name")));
-	        dataSource.setUrl(Preconditions.checkNotNull(env.getProperty("spring.datasource.url")));
-	        dataSource.setUsername(Preconditions.checkNotNull(env.getProperty("spring.datasource.username")));
-	        dataSource.setPassword(Preconditions.checkNotNull(env.getProperty("spring.datasource.password")));
-
-	        return dataSource;
-	    }
-
-	    @Bean
-	    public PlatformTransactionManager transactionManager(EntityManagerFactory emf) { // EntityManagerFactory emf
-	        final JpaTransactionManager transactionManager = new JpaTransactionManager();
-	        transactionManager.setEntityManagerFactory(emf); // entityManagerFactory().getObject()
-	        return transactionManager;
-	    }
-
-	    @Bean
-	    public PersistenceExceptionTranslationPostProcessor exceptionTranslation() {
-	        return new PersistenceExceptionTranslationPostProcessor();
-	    }
-	    
+		/*
+		 * @Bean public DataSource dataSource() { //
+		 * spring.datasource.url=jdbc:h2:mem:testdb;MODE=Oracle;DB_CLOSE_ON_EXIT=FALSE;
+		 * DB_CLOSE_DELAY=-1 // without DB_CLOSE_DELAY=-1, the schema created (but lost)
+		 * and when run application, the error "QUOTES" table not found final
+		 * DriverManagerDataSource dataSource = new DriverManagerDataSource();
+		 * dataSource.setDriverClassName(Preconditions.checkNotNull(env.getProperty(
+		 * "spring.datasource.driver-class-name")));
+		 * dataSource.setUrl(Preconditions.checkNotNull(env.getProperty(
+		 * "spring.datasource.url")));
+		 * dataSource.setUsername(Preconditions.checkNotNull(env.getProperty(
+		 * "spring.datasource.username")));
+		 * dataSource.setPassword(Preconditions.checkNotNull(env.getProperty(
+		 * "spring.datasource.password")));
+		 * 
+		 * return dataSource; }
+		 * 
+		 * 
+		 * @Bean public PlatformTransactionManager
+		 * transactionManager(EntityManagerFactory emf) { // EntityManagerFactory emf
+		 * 
+		 * final JpaTransactionManager transactionManager = new JpaTransactionManager();
+		 * transactionManager.setEntityManagerFactory(emf); // return
+		 * transactionManager; }
+		 * 
+		 * 
+		 * @Bean public PersistenceExceptionTranslationPostProcessor
+		 * exceptionTranslation() { return new
+		 * PersistenceExceptionTranslationPostProcessor(); }
+		 */
 	    /**
 	     * 1. check Spring properties: https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#appendix.application-properties.data
 	     * 2. check JPA properties such as  Javax JPA 2.0, Jakarta JPA (Javax JPA renamed)
@@ -189,16 +175,23 @@ public class DBConfigurationProperties {
 	     * 
 	     * @return
 	     */
-	    final Properties additionalProperties() {
-	        final Properties springJPAProperties = new Properties();
-	        springJPAProperties.setProperty("hibernate.dialect", env.getProperty("spring.jpa.hibernate.dialect"));
-	        springJPAProperties.setProperty("spring.jpa.defer-datasource-initialization", env.getProperty("spring.jpa.defer-datasource-initialization"));
-	        springJPAProperties.setProperty("hibernate.hbm2ddl.auto", env.getProperty("spring.jpa.hibernate.hbm2ddl.auto"));
-	        springJPAProperties.setProperty("hibernate.cache.use_second_level_cache", "false");        
-	        springJPAProperties.setProperty("hibernate.hbm2ddl.import_files", env.getProperty("spring.jpa.properties.hibernate.hbm2ddl.import_files"));
-	        springJPAProperties.setProperty("spring.jpa.show_sql", env.getProperty("spring.jpa.properties.hibernate.show_sql"));
-	        springJPAProperties.setProperty("hibernate.enable_lazy_load_no_trans", env.getProperty("spring.jpa.properties.hibernate.enable_lazy_load_no_trans"));
-	        return springJPAProperties;
-	    }
+		/*
+		 * final Properties additionalProperties() { final Properties
+		 * springJPAProperties = new Properties();
+		 * springJPAProperties.setProperty("hibernate.dialect",
+		 * env.getProperty("spring.jpa.hibernate.dialect"));
+		 * springJPAProperties.setProperty("spring.jpa.defer-datasource-initialization",
+		 * env.getProperty("spring.jpa.defer-datasource-initialization"));
+		 * springJPAProperties.setProperty("hibernate.hbm2ddl.auto",
+		 * env.getProperty("spring.jpa.hibernate.hbm2ddl.auto"));
+		 * springJPAProperties.setProperty("hibernate.cache.use_second_level_cache",
+		 * "false"); springJPAProperties.setProperty("hibernate.hbm2ddl.import_files",
+		 * env.getProperty("spring.jpa.properties.hibernate.hbm2ddl.import_files"));
+		 * springJPAProperties.setProperty("spring.jpa.show_sql",
+		 * env.getProperty("spring.jpa.properties.hibernate.show_sql"));
+		 * springJPAProperties.setProperty("hibernate.enable_lazy_load_no_trans",
+		 * env.getProperty("spring.jpa.properties.hibernate.enable_lazy_load_no_trans"))
+		 * ; return springJPAProperties; }
+		 */
 	   
 }
